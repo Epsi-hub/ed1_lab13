@@ -8,8 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping
+@RequestMapping("/product")
 public class ProductController {
     private final ProductService productService;
 
@@ -17,11 +19,23 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<ProductEntity>> getAllProducts() {
+        return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductEntity> getProduct(@PathVariable long id){
+        return productService.getProductById(id)
+                .map (ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     public ResponseEntity<ProductEntity> createProduct (@RequestBody CreateProductRequest createProductRequest){
         try {
-            ProductEntity productEntity = productService.updateProduct(id, createProductRequest);
-            return new ResponseEntity.ok(productEntity, HttpStatus.CREATED);
+            ProductEntity productEntity = productService.createProduct(createProductRequest);
+            return new ResponseEntity<>(productEntity, HttpStatus.CREATED);
         }
         catch (IllegalArgumentException e){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -29,13 +43,12 @@ public class ProductController {
     }
 
 
-    @GetMapping
+    @PutMapping("/{id}")
     public ResponseEntity<ProductEntity> updateProduct (@PathVariable Long id, @RequestBody UpdateProductRequest updateProductRequest){
         try {
-            ProductEntity productEntity = productService.createProduct(createProductRequest);
-            return new ResponseEntity<>(productEntity, HttpStatus.CREATED);
-        }
-        catch (IllegalArgumentException e){
+            ProductEntity productEntity = productService.updateProduct(id, updateProductRequest);
+            return ResponseEntity.ok(productEntity);
+        } catch (IllegalArgumentException e){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
